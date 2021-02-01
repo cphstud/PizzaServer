@@ -5,7 +5,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class Main {
     Random rd = new Random();
-    List<Pizza> pizzas;
+    Pizza[] pizzas;
     //Pizza[] pizzas;
     //ArrayBlockingQueue<Pizza> pizzas;
     public final List<PizzaDTO> menu;
@@ -13,8 +13,8 @@ public class Main {
     public Main() {
 
         //pizzas = new ArrayBlockingQueue<>(256);
-        //pizzas = new Pizza[256];
-        pizzas = new ArrayList<>();
+        pizzas = new Pizza[256];
+        //pizzas = new ArrayList<>();
         this.menu = Util.retMenu();
     }
 
@@ -42,18 +42,19 @@ public class Main {
         tc3.setName("Arne");
         tc4.setName("Ib");
         tc.start();
-        //tc2.start();
-        //tc3.start();
-        //tc4.start();
+        tc2.start();
+        tc3.start();
+        tc4.start();
     }
 
 }
 
 class PizzaBaker implements Runnable{
-    List<Pizza> pizzas;
+    //List<Pizza> pizzas;
+    Pizza[] pizzas;
     List<PizzaDTO> menu;
 
-    PizzaBaker(List<Pizza> pizzas, List<PizzaDTO> menu) {
+    PizzaBaker(Pizza[] pizzas, List<PizzaDTO> menu) {
         this.pizzas = pizzas;
         this.menu = menu;
     }
@@ -61,13 +62,16 @@ class PizzaBaker implements Runnable{
     public void run() {
         int[] choices = {0,1,2,3,4};
         int counter = 0;
+        int pos=0;
         PizzaDTO p = null;
         Pizza pz = null;
         while(true) {
             counter++;
             p = menu.get(choices[counter%4]);
             pz = new Pizza(p);
-            pizzas.add(pz);
+            pos = vaccantPos(pizzas);
+
+            pizzas[pos]=pz;
             System.out.println(Util.ANSI_PURPLE+"BAKER SLEEPS after adding " + pz.getName() + ", no " + pz.getNo() );
             try {
                 Thread.sleep(500);
@@ -76,22 +80,29 @@ class PizzaBaker implements Runnable{
             }
         }
     }
+    public int vaccantPos(Pizza[] p) {
+        int retVal = 0;
+        while(p[retVal]!=null) {
+            retVal++;
+        }
+        return retVal;
+    }
 }
 
 class PizzaCustomer implements Runnable {
     //List<Pizza> pizzas;
-    List<Pizza> pizzas;
+    Pizza[] pizzas;
     List<PizzaDTO> menu;
 
-    PizzaCustomer(List<Pizza> pizzas, List<PizzaDTO> menu) {
+    PizzaCustomer(Pizza[] pizzas, List<PizzaDTO> menu) {
         this.pizzas = pizzas;
         this.menu = menu;
     }
-
     @Override
     public void run() {
         int[] choices = {1,2,3,4,5};
         int counter = 0;
+        int pos = 0;
         PizzaDTO p = null;
         Pizza pz = null;
         String col = "";
@@ -105,10 +116,12 @@ class PizzaCustomer implements Runnable {
         while(true) {
             p = menu.get(choices[counter%((choices.length)-1)]);
             //pz=pizzas.get(choices[counter%((choices.length)-1)]);
-            for (Pizza pizza : pizzas ) {
-                if(pizza.getNo() == p.getNo()) {
+            pos=vaccantPos(pizzas);
+            for (int i = 0; i < pos; i++) {
+                System.out.println(col+"Customer " + Thread.currentThread().getName() + " will look at .."+pizzas[i].getName()+", "+pizzas[i].getNo() + " look for " +p.getNo());
+                if(pizzas[i].getNo() == p.getNo() ) {
                     System.out.println(col+"Customer " + Thread.currentThread().getName() + " will eat .."+p.getName()+", "+p.getNo());
-                    pizzas.remove(pizza);
+                    pizzas[i]=null;
                 }
             }
             System.out.println(col+"CUSTOMER SLEEPS");
@@ -119,5 +132,12 @@ class PizzaCustomer implements Runnable {
             }
             counter++;
         }
+    }
+    public int vaccantPos(Pizza[] p) {
+        int retVal = 0;
+        while(p[retVal]!=null) {
+            retVal++;
+        }
+        return retVal;
     }
 }
