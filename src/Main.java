@@ -5,15 +5,15 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class Main {
     Random rd = new Random();
-    Pizza[] pizzas;
     //Pizza[] pizzas;
-    //ArrayBlockingQueue<Pizza> pizzas;
+    //Pizza[] pizzas;
+    ArrayBlockingQueue<Pizza> pizzas;
     public final List<PizzaDTO> menu;
 
     public Main() {
 
-        //pizzas = new ArrayBlockingQueue<>(256);
-        pizzas = new Pizza[256];
+        pizzas = new ArrayBlockingQueue<>(256);
+        //pizzas = new Pizza[256];
         //pizzas = new ArrayList<>();
         this.menu = Util.retMenu();
     }
@@ -51,10 +51,10 @@ public class Main {
 
 class PizzaBaker implements Runnable{
     //List<Pizza> pizzas;
-    Pizza[] pizzas;
+    ArrayBlockingQueue<Pizza> pizzas;
     List<PizzaDTO> menu;
 
-    PizzaBaker(Pizza[] pizzas, List<PizzaDTO> menu) {
+    PizzaBaker(ArrayBlockingQueue<Pizza> pizzas, List<PizzaDTO> menu) {
         this.pizzas = pizzas;
         this.menu = menu;
     }
@@ -69,9 +69,10 @@ class PizzaBaker implements Runnable{
             counter++;
             p = menu.get(choices[counter%4]);
             pz = new Pizza(p);
-            pos = vaccantPos(pizzas);
+            //pos = vaccantPos(pizzas);
+            pizzas.add(pz);
 
-            pizzas[pos]=pz;
+            //pizzas[pos]=pz;
             System.out.println(Util.ANSI_PURPLE+"BAKER SLEEPS after adding " + pz.getName() + ", no " + pz.getNo() );
             try {
                 Thread.sleep(500);
@@ -91,10 +92,10 @@ class PizzaBaker implements Runnable{
 
 class PizzaCustomer implements Runnable {
     //List<Pizza> pizzas;
-    Pizza[] pizzas;
+    ArrayBlockingQueue<Pizza> pizzas;
     List<PizzaDTO> menu;
 
-    PizzaCustomer(Pizza[] pizzas, List<PizzaDTO> menu) {
+    PizzaCustomer(ArrayBlockingQueue<Pizza> pizzas, List<PizzaDTO> menu) {
         this.pizzas = pizzas;
         this.menu = menu;
     }
@@ -115,13 +116,12 @@ class PizzaCustomer implements Runnable {
         }
         while(true) {
             p = menu.get(choices[counter%((choices.length)-1)]);
-            //pz=pizzas.get(choices[counter%((choices.length)-1)]);
-            pos=vaccantPos(pizzas);
-            for (int i = 0; i < pos; i++) {
-                System.out.println(col+"Customer " + Thread.currentThread().getName() + " will look at .."+pizzas[i].getName()+", "+pizzas[i].getNo() + " look for " +p.getNo());
-                if(pizzas[i].getNo() == p.getNo() ) {
+            //kpos=vaccantPos(pizzas);
+            for(Pizza pizza:  pizzas) {
+                System.out.println(col+"Customer " + Thread.currentThread().getName() + " will look at .."+pizza.getName()+", "+pizza.getNo() + " look for " +p.getNo());
+                if(pizza.getNo() == p.getNo() ) {
                     System.out.println(col+"Customer " + Thread.currentThread().getName() + " will eat .."+p.getName()+", "+p.getNo());
-                    pizzas[i]=null;
+                    pizzas.remove(pizza);
                 }
             }
             System.out.println(col+"CUSTOMER SLEEPS");
